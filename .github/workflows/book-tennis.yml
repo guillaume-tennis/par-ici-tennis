@@ -2,80 +2,80 @@ name: Tennis booking
 
 on:
   schedule:
-    # Run 15 minutes early to account for possible delays in GitHub Actions scheduling.
-    - cron: '45 7 * * *'
+    - cron: '45 7 * * 1'
       timezone: 'Europe/Paris'
-  workflow_dispatch:
+    - cron: '45 7 * * 2'
+      timezone: 'Europe/Paris'
+    - cron: '45 7 * * 4'
+      timezone: 'Europe/Paris'
 
 permissions:
   contents: read
-  actions: write # to disable this workflow after it runs
-
-concurrency:
-  group: ${{ github.workflow }}
-  cancel-in-progress: true
 
 jobs:
-  run-once:
-    name: Run script at 08:00 Europe/Paris and self-disable
+  booking:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: 1
+            schedule: '45 7 * * 1'
+            email_secret: ACCOUNT1_EMAIL
+            password_secret: ACCOUNT1_PASSWORD
+            config_var: CONFIG1
+
+          - id: 2
+            schedule: '45 7 * * 1'
+            email_secret: ACCOUNT2_EMAIL
+            password_secret: ACCOUNT2_PASSWORD
+            config_var: CONFIG2
+
+          - id: 3
+            schedule: '45 7 * * 2'
+            email_secret: ACCOUNT3_EMAIL
+            password_secret: ACCOUNT3_PASSWORD
+            config_var: CONFIG3
+
+          - id: 4
+            schedule: '45 7 * * 4'
+            email_secret: ACCOUNT4_EMAIL
+            password_secret: ACCOUNT4_PASSWORD
+            config_var: CONFIG4
+
+          - id: 5
+            schedule: '45 7 * * 4'
+            email_secret: ACCOUNT5_EMAIL
+            password_secret: ACCOUNT5_PASSWORD
+            config_var: CONFIG5
+
+    if: github.event.schedule == matrix.schedule
+
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 24
 
-      - name: Create config.json from variables
-        env:
-          CONFIG_JSON: ${{ vars.CONFIG_JSON }}
+      - name: Create config
         run: |
-          set -euo pipefail
-          if [ -n "${CONFIG_JSON:-}" ]; then
-            printf "%s" "$CONFIG_JSON" > config.json
-            echo "config.json created from CONFIG_JSON secret"
-          else
-            echo "ERROR: Missing CONFIG_JSON secret." >&2
-            exit 1
-          fi
+          printf '%s' '${{ vars[matrix.config_var] }}' > config.json
 
       - name: Install dependencies
-        run: npm ci --production --ignore-scripts
+        run: npm ci
 
-      - name: Cache Playwright browser
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
 
-      - name: Install Playwright browser (only-shell)
-        run: npx playwright install chromium --only-shell
-
-      - name: Wait 08:00 Europe/Paris
-        if: github.event_name == 'schedule'
+      - name: Wait until 08:00
         run: npm run wait
 
-      - name: Run script
+      - name: Book tennis court
         env:
-          ACCOUNT_EMAIL: ${{ secrets.ACCOUNT_EMAIL }}
-          ACCOUNT_PASSWORD: ${{ secrets.ACCOUNT_PASSWORD }}
-          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
-          NTFY_DOMAIN: ${{ secrets.NTFY_DOMAIN }}
+          ACCOUNT_EMAIL: ${{ secrets[matrix.email_secret] }}
+          ACCOUNT_PASSWORD: ${{ secrets[matrix.password_secret] }}
         run: npm start
-
-      - name: Self-disable this workflow (GitHub CLI)
-        if: always()
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          echo "GitHub CLI version:" && gh --version
-          echo "Disabling workflow using gh..."
-          # Disable this workflow so it won't run automatically the next day
-          gh workflow disable .github/workflows/book-tennis.yml
-          echo "Workflow disabled. Re-enable it manually from the Actions tab when needed."
