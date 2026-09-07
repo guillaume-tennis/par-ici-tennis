@@ -2,11 +2,11 @@ name: Tennis booking
 
 on:
   schedule:
-    - cron: '45 7 * * 1'
-      timezone: 'Europe/Paris'
     - cron: '45 7 * * 2'
       timezone: 'Europe/Paris'
-    - cron: '45 7 * * 4'
+    - cron: '45 7 * * 3'
+      timezone: 'Europe/Paris'
+    - cron: '45 7 * * 5'
       timezone: 'Europe/Paris'
 
 permissions:
@@ -19,31 +19,31 @@ jobs:
       matrix:
         include:
           - id: 1
-            schedule: '45 7 * * 1'
+            schedule: '45 7 * * 2'
             email_secret: ACCOUNT1_EMAIL
             password_secret: ACCOUNT1_PASSWORD
             config_var: CONFIG1
 
           - id: 2
-            schedule: '45 7 * * 1'
+            schedule: '45 7 * * 2'
             email_secret: ACCOUNT2_EMAIL
             password_secret: ACCOUNT2_PASSWORD
             config_var: CONFIG2
 
           - id: 3
-            schedule: '45 7 * * 2'
+            schedule: '45 7 * * 3'
             email_secret: ACCOUNT3_EMAIL
             password_secret: ACCOUNT3_PASSWORD
             config_var: CONFIG3
 
           - id: 4
-            schedule: '45 7 * * 4'
+            schedule: '45 7 * * 5'
             email_secret: ACCOUNT4_EMAIL
             password_secret: ACCOUNT4_PASSWORD
             config_var: CONFIG4
 
           - id: 5
-            schedule: '45 7 * * 4'
+            schedule: '45 7 * * 5'
             email_secret: ACCOUNT5_EMAIL
             password_secret: ACCOUNT5_PASSWORD
             config_var: CONFIG5
