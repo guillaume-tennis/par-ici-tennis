@@ -13,43 +13,99 @@ permissions:
   contents: read
 
 jobs:
-  booking:
+  monday:
+    if: github.event.schedule == '45 7 * * 2'
     strategy:
       fail-fast: false
       matrix:
         include:
-          - id: 1
-            schedule: '45 7 * * 2'
-            email_secret: ACCOUNT1_EMAIL
+          - email_secret: ACCOUNT1_EMAIL
             password_secret: ACCOUNT1_PASSWORD
             config_var: CONFIG1
-
-          - id: 2
-            schedule: '45 7 * * 2'
-            email_secret: ACCOUNT2_EMAIL
+          - email_secret: ACCOUNT2_EMAIL
             password_secret: ACCOUNT2_PASSWORD
             config_var: CONFIG2
+    runs-on: ubuntu-latest
 
-          - id: 3
-            schedule: '45 7 * * 3'
-            email_secret: ACCOUNT3_EMAIL
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Create config
+        run: |
+          printf '%s' '${{ vars[matrix.config_var] }}' > config.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Wait until 08:00
+        run: npm run wait
+
+      - name: Book tennis court
+        env:
+          ACCOUNT_EMAIL: ${{ secrets[matrix.email_secret] }}
+          ACCOUNT_PASSWORD: ${{ secrets[matrix.password_secret] }}
+        run: npm start
+
+  tuesday:
+    if: github.event.schedule == '45 7 * * 3'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - email_secret: ACCOUNT3_EMAIL
             password_secret: ACCOUNT3_PASSWORD
             config_var: CONFIG3
+    runs-on: ubuntu-latest
 
-          - id: 4
-            schedule: '45 7 * * 5'
-            email_secret: ACCOUNT4_EMAIL
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Create config
+        run: |
+          printf '%s' '${{ vars[matrix.config_var] }}' > config.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Wait until 08:00
+        run: npm run wait
+
+      - name: Book tennis court
+        env:
+          ACCOUNT_EMAIL: ${{ secrets[matrix.email_secret] }}
+          ACCOUNT_PASSWORD: ${{ secrets[matrix.password_secret] }}
+        run: npm start
+
+  thursday:
+    if: github.event.schedule == '45 7 * * 5'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - email_secret: ACCOUNT4_EMAIL
             password_secret: ACCOUNT4_PASSWORD
             config_var: CONFIG4
-
-          - id: 5
-            schedule: '45 7 * * 5'
-            email_secret: ACCOUNT5_EMAIL
+          - email_secret: ACCOUNT5_EMAIL
             password_secret: ACCOUNT5_PASSWORD
             config_var: CONFIG5
-
-    if: github.event.schedule == matrix.schedule
-
     runs-on: ubuntu-latest
 
     steps:
