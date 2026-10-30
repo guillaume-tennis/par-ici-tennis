@@ -35,6 +35,7 @@ const bookTennis = async () => {
   // wait for login redirection before continue
   await page.waitForSelector('.main-informations')
 
+  let reservationConfirmed = false
   try {
     const locations = !Array.isArray(config.locations) ? Object.keys(config.locations) : config.locations
     locationsLoop:
@@ -135,6 +136,7 @@ const bookTennis = async () => {
       await submit.click()
 
       await page.waitForSelector('.confirmReservation')
+      reservationConfirmed = true
 
       // Extract reservation details
       const address = (await page.locator('.address').textContent()).trim().replace(/( ){2,}/g, ' ')
@@ -185,10 +187,11 @@ const bookTennis = async () => {
       break
     }
   } catch (e) {
-    console.log(e)
-    const screenshot = await page.screenshot({ path: 'img/failure.png' })
+    console.error('BOOKING_ERROR:', e)
+    process.exitCode = 1
+    const screenshot = await page.screenshot({ path: 'img/failure.png' }).catch(() => null)
 
-    if (config.ntfy?.enable === true || process.env.NTFY_TOPIC) {
+    if (screenshot && (config.ntfy?.enable === true || process.env.NTFY_TOPIC)) {
       await notify(screenshot, 'failure.png', 'Erreur lors de l\'execution du programme.', {
         domain: config?.ntfy?.domain || process.env.NTFY_DOMAIN,
         topic: config?.ntfy?.topic || process.env.NTFY_TOPIC,
@@ -196,7 +199,14 @@ const bookTennis = async () => {
     }
   }
 
+  if (!DRY_RUN_MODE && !reservationConfirmed) {
+    console.error('BOOKING_NOT_CONFIRMED')
+    process.exitCode = 1
+  }
   await browser.close()
 }
 
-bookTennis()
+bookTennis().catch(error => {
+  console.error('FATAL_BOOKING_ERROR:', error)
+  process.exitCode = 1
+})
