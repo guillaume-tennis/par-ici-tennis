@@ -25,7 +25,7 @@ jobs:
           - email_secret: ACCOUNT2_EMAIL
             password_secret: ACCOUNT2_PASSWORD
             config_var: CONFIG2
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -40,7 +40,10 @@ jobs:
           printf '%s' '${{ vars[matrix.config_var] }}' > config.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
+
+      - name: Install supported Playwright
+        run: npm install --no-save --package-lock=false --ignore-scripts playwright@1.61.0
 
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
@@ -63,7 +66,7 @@ jobs:
           - email_secret: ACCOUNT3_EMAIL
             password_secret: ACCOUNT3_PASSWORD
             config_var: CONFIG3
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -78,7 +81,10 @@ jobs:
           printf '%s' '${{ vars[matrix.config_var] }}' > config.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
+
+      - name: Install supported Playwright
+        run: npm install --no-save --package-lock=false --ignore-scripts playwright@1.61.0
 
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
@@ -104,7 +110,7 @@ jobs:
           - email_secret: ACCOUNT5_EMAIL
             password_secret: ACCOUNT5_PASSWORD
             config_var: CONFIG5
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -119,7 +125,10 @@ jobs:
           printf '%s' '${{ vars[matrix.config_var] }}' > config.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
+
+      - name: Install supported Playwright
+        run: npm install --no-save --package-lock=false --ignore-scripts playwright@1.61.0
 
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
